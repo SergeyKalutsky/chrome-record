@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "identity"
   ],
   "background": {
     "service_worker": "background.js"
@@ -20,5 +21,11 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"]
     }
-  ]
+  ],
+  "oauth2": {
+    "client_id": "836487918008-urt2chh1e100khdlgcbngvht71nbt0q7.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  }
 }
