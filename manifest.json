@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Screen Recorder",
+  "version": "1.0",
+  "description": "A simple screen recording extension",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "hello_extensions.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
