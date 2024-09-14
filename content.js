@@ -11,6 +11,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  }
+
 async function startRecording() {
     try {
         // Capture screen stream
@@ -48,34 +58,31 @@ async function startRecording() {
 
         mediaRecorder.onstop = async () => {
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            chrome.runtime.sendMessage({ action: 'uploadToDrive', blob: blob }, (response) => {
-                if (response.success) {
-                    console.log('File uploaded successfully');
-                } else {
-                    console.error('Failed to upload file:', response.error);
-                }
+            console.log('Recording stopped:', blob);
+             // Convert Blob to ArrayBuffer
+            const arrayBuffer = await blob.arrayBuffer();
+            const chunkSize = 64 * 1024; // 64KB
+            const port = chrome.runtime.connect({ name: 'upload' });
+            
+            for (let i = 0; i < arrayBuffer.byteLength; i += chunkSize) {
+                const chunk = arrayBuffer.slice(i, i + chunkSize);
+                const base64Chunk = arrayBufferToBase64(chunk);
+                port.postMessage({ action: 'uploadChunk', chunk: base64Chunk });
+              }
+
+            port.postMessage({ action: 'uploadComplete' });
+      
+            port.onMessage.addListener((response) => {
+              if (response.success) {
+                console.log('File uploaded successfully', response.link);
+              } else {
+                console.error('Failed to upload file:', response.error);
+              }
             });
 
             // Stop all tracks to release resources
             screenStream.getTracks().forEach(track => track.stop());
             audioStream.getTracks().forEach(track => track.stop());
-            // const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            // const url = URL.createObjectURL(blob);
-
-            // // Create a download link and click it programmatically
-            // document.getElementById('recordingLink')?.remove();
-            // const a = document.createElement('a');
-            // a.setAttribute('id', 'recordingLink');
-            // a.style.display = 'none';
-            // a.href = url;
-            // a.download = 'screen-recording.webm';
-            // document.body.appendChild(a);
-            // a.click();
-            // window.URL.revokeObjectURL(url);
-
-            // // Stop all tracks to release resources
-            // screenStream.getTracks().forEach(track => track.stop());
-            // audioStream.getTracks().forEach(track => track.stop());
         };
 
         mediaRecorder.start();

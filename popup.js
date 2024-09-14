@@ -3,7 +3,6 @@ const stopBtn = document.getElementById('stopBtn');
 const downloadLink = document.getElementById('downloadLink');
 
 chrome.storage.local.get('isRecording', (data) => {
-  console.log(data);
   if (data.isRecording) {
     startBtn.disabled = true;
     stopBtn.disabled = false;
